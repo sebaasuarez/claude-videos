@@ -79,14 +79,22 @@ def setup():
     print("\nNext: python scripts/pipeline.py prompt --episode ep001")
 
 
-def prompt_step(episode_id: str):
-    """Print the Google Flow prompt for a given episode."""
-    run("02_flow_prompt.py", ["--episode", episode_id])
+def prompt_step(episode_id: str = None, all_episodes: bool = False):
+    """Print the Google Flow prompt for a given episode or all episodes."""
+    if all_episodes:
+        run("02_flow_prompt.py", ["--all"])
+    else:
+        run("02_flow_prompt.py", ["--episode", episode_id])
 
 
-def voice_step(episode_id: str):
+def voice_step(episode_id: str = None, all_episodes: bool = False, series: bool = False):
     """Generate Spanish voiceover with ElevenLabs."""
-    run("03_generate_voice.py", ["--episode", episode_id])
+    if all_episodes:
+        run("03_generate_voice.py", ["--all"])
+    elif series:
+        run("03_generate_voice.py", ["--series"])
+    else:
+        run("03_generate_voice.py", ["--episode", episode_id])
 
 
 def lipsync_step(episode_id: str):
@@ -149,10 +157,15 @@ def main():
     sub.add_parser("setup", help="Generate Sofi reference images (one-time)")
 
     p = sub.add_parser("prompt", help="Print Google Flow prompt for an episode")
-    p.add_argument("--episode", required=True)
+    pgrp = p.add_mutually_exclusive_group(required=True)
+    pgrp.add_argument("--episode", help="Episode ID (e.g. ep001)")
+    pgrp.add_argument("--all", action="store_true", help="Print all 4 prompts")
 
     v = sub.add_parser("voice", help="Generate Spanish voiceover")
-    v.add_argument("--episode", required=True)
+    vgrp = v.add_mutually_exclusive_group(required=True)
+    vgrp.add_argument("--episode", help="Episode ID")
+    vgrp.add_argument("--all", action="store_true", help="Generate all 4 episodes")
+    vgrp.add_argument("--series", action="store_true", help="Generate full series in one take")
 
     ls = sub.add_parser("lipsync", help="Apply lip-sync (Magic Hour)")
     ls.add_argument("--episode", required=True)
@@ -174,9 +187,9 @@ def main():
     if args.command == "setup":
         setup()
     elif args.command == "prompt":
-        prompt_step(args.episode)
+        prompt_step(args.episode, getattr(args, "all", False))
     elif args.command == "voice":
-        voice_step(args.episode)
+        voice_step(args.episode, getattr(args, "all", False), getattr(args, "series", False))
     elif args.command == "lipsync":
         lipsync_step(args.episode)
     elif args.command == "add":

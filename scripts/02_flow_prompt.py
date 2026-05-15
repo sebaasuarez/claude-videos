@@ -8,6 +8,7 @@ No API needed, just your browser.
 
 Usage:
   python scripts/02_flow_prompt.py --episode ep001
+  python scripts/02_flow_prompt.py --all        # print all 4 clips at once
 """
 
 import json
@@ -16,76 +17,111 @@ from pathlib import Path
 
 CONFIG_DIR = Path(__file__).parent.parent / "config"
 
+# Sofi's character block — identical in every clip to enforce consistency
+CHARACTER_BLOCK = """Personaje (mantener idéntico en todos los clips):
+Mujer adulta joven de aproximadamente 30 años, apariencia latina, piel trigueña clara con subtono cálido, rostro ovalado ligeramente alargado, facciones suaves, ojos café oscuro almendrados, cejas naturales de grosor medio, nariz delicada y proporcional, labios medianos de tono rosado natural, sonrisa suave y serena, mirada cálida, empática y tranquila. Cabello castaño oscuro, liso con movimiento natural, largo hasta los hombros, raya en el centro. Maquillaje natural muy sutil, piel luminosa y saludable."""
+
+OUTFIT_BLOCK = """Vestimenta (mantener idéntica en todos los clips):
+Cardigan tejido color lila suave con escote en V, blusa básica beige debajo, pantalón beige claro. Aretes pequeños de argolla dorada, collar fino minimalista."""
+
+SETTING_BLOCK = """Entorno (mantener idéntico en todos los clips):
+Sala minimalista, acogedora y cálida. Sillón beige. Luz natural suave entrando por ventana lateral izquierda. Tonos crema, beige, blanco cálido y detalles lila. Plantas verdes, escritorio de madera, cuadro lila en la pared. Ambiente íntimo y tranquilo."""
+
+STYLE_BLOCK = """Estilo visual:
+Realista, cinematográfico, premium. Plano medio cercano. Cámara estable con movimiento muy sutil hacia adelante. Profundidad de campo suave. Iluminación cálida natural. Ambiente emocional y relajante. 9:16 vertical."""
+
+RULES_BLOCK = """Importante:
+- No agregar texto en pantalla.
+- No cortar el audio al final.
+- Un solo plano continuo, sin cortes.
+- Mantener siempre la misma apariencia facial, edad, tono de piel, color de ojos, cabello, ropa lila y entorno."""
+
+
+def load_episodes() -> list:
+    with open(CONFIG_DIR / "episodes.json") as f:
+        return json.load(f)
+
 
 def load_episode(episode_id: str) -> dict:
-    with open(CONFIG_DIR / "episodes.json") as f:
-        data = json.load(f)
+    data = load_episodes()
     for ep in data["episodes"]:
         if ep["id"] == episode_id:
             return ep
     raise ValueError(f"Episode {episode_id} not found")
 
 
-def load_character() -> dict:
-    with open(CONFIG_DIR / "sofi_character.json") as f:
-        return json.load(f)
+def build_flow_prompt(episode: dict) -> str:
+    has_image = (CONFIG_DIR.parent / "characters" / "sofi_ref_01.png").exists()
+    ingredient_note = (
+        "\n[IMPORTANTE: Sube characters/sofi_ref_01.png como ingrediente de personaje "
+        "para bloquear la apariencia de Sofi en todos los clips]"
+        if has_image else ""
+    )
+
+    prompt = f"""Video vertical 9:16, {episode['duration_seconds']} segundos, realista y cinematográfico.
+Cuenta: "Pedacito de Tranquilidad"
+{ingredient_note}
+
+{CHARACTER_BLOCK}
+
+{OUTFIT_BLOCK}
+
+{SETTING_BLOCK}
+
+Escena (Clip {episode['clip_number']} de 4):
+{episode['scene_description']}
+
+Movimiento:
+{episode['movement']}
+
+{STYLE_BLOCK}
+
+{RULES_BLOCK}"""
+
+    return prompt.strip()
 
 
-def build_flow_prompt(episode: dict, character: dict) -> str:
-    v = character["visual_style"]
-    s = character["setting"]
-    a = character["appearance"]
-    o = character["outfit"]
+def print_episode_prompt(episode: dict):
+    prompt = build_flow_prompt(episode)
+    clip_num = episode['clip_number']
+    total = 4
 
-    prompt = f"""Cinematic 9:16 vertical video, 5 seconds.
-
-Character: Young Latin woman ~30 years old, light warm brown skin, oval face, dark brown almond eyes, natural eyebrows, delicate nose, rosy medium lips, soft serene smile. Dark brown straight shoulder-length hair with natural movement, center part. Very subtle natural makeup, luminous skin.
-
-Outfit: Soft lilac knit V-neck cardigan, basic beige blouse underneath, light beige pants. Small gold hoop earrings, thin minimalist necklace.
-
-Scene: {episode['scene_description']}
-
-Setting: Minimalist cozy warm living room. Beige armchair. Soft natural light from left side window. Cream, beige, warm white tones with lilac accents. Green plants in background. Wooden desk. Lilac painting on wall. Intimate warm atmosphere.
-
-Camera: Medium close-up, stable with very subtle push-in forward movement, soft depth of field, warm natural cinematic lighting.
-
-Movement: {episode['movement']}
-
-Style: Realistic, cinematic, premium, emotional and relaxing mood. No text overlays."""
-
-    return prompt
+    print(f"\n{'═' * 65}")
+    print(f"  GOOGLE FLOW — Clip {clip_num}/{total}: {episode['title']}  [{episode['id']}]")
+    print(f"{'═' * 65}")
+    print()
+    print(prompt)
+    print()
+    print(f"{'─' * 65}")
+    print("INSTRUCCIONES:")
+    print("  1. Ve a: https://labs.google/flow")
+    print("  2. Haz clic en 'Generate video'")
+    print("  3. Pega el prompt de arriba")
+    if (CONFIG_DIR.parent / "characters" / "sofi_ref_01.png").exists():
+        print("  4. Sube characters/sofi_ref_01.png como ingrediente de personaje")
+    print("  5. Selecciona Veo 3.1, formato 9:16")
+    print("  6. Genera (~4 créditos gratuitos)")
+    print(f"  7. Descarga como: videos/{episode['id']}_raw.mp4")
+    print()
+    print(f"Luego genera la voz:")
+    print(f"  python scripts/pipeline.py voice --episode {episode['id']}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Google Flow prompt for an episode")
-    parser.add_argument("--episode", required=True, help="Episode ID (e.g. ep001)")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--episode", help="Episode ID (e.g. ep001)")
+    group.add_argument("--all", action="store_true", help="Print prompts for all episodes")
     args = parser.parse_args()
 
-    episode = load_episode(args.episode)
-    character = load_character()
-    prompt = build_flow_prompt(episode, character)
-
-    print("=" * 60)
-    print(f"GOOGLE FLOW PROMPT — {args.episode}: {episode['title']}")
-    print("=" * 60)
-    print()
-    print(prompt)
-    print()
-    print("=" * 60)
-    print("INSTRUCTIONS:")
-    print("  1. Go to: https://labs.google/flow")
-    print("  2. Click 'Generate video'")
-    print("  3. Paste the prompt above")
-    if (CONFIG_DIR.parent / "characters" / "sofi_ref_01.png").exists():
-        print("  4. Click the image icon → Upload characters/sofi_ref_01.png as ingredient")
-        print("     (this locks Sofi's appearance for ALL future videos)")
-    print("  5. Select Veo 3.1 model, 9:16 aspect ratio")
-    print("  6. Generate (costs ~4 free daily credits)")
-    print("  7. Download the video as MP4")
-    print(f"  8. Save it to: videos/{args.episode}_raw.mp4")
-    print()
-    print("Then run:")
-    print(f"  python scripts/03_generate_voice.py --episode {args.episode}")
+    if args.all:
+        data = load_episodes()
+        for ep in data["episodes"]:
+            print_episode_prompt(ep)
+            print()
+    else:
+        episode = load_episode(args.episode)
+        print_episode_prompt(episode)
 
 
 if __name__ == "__main__":
