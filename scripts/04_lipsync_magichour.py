@@ -25,6 +25,9 @@ import time
 import argparse
 import requests
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 CONFIG_DIR = Path(__file__).parent.parent / "config"
 VIDEOS_DIR = Path(__file__).parent.parent / "videos"

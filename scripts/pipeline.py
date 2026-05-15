@@ -30,6 +30,9 @@ import json
 import argparse
 import subprocess
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 BASE_DIR = Path(__file__).parent.parent
 CONFIG_DIR = BASE_DIR / "config"
