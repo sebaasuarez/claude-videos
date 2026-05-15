@@ -1,0 +1,65 @@
+{
+  "series_title": "No eres débil",
+  "account": "Pedacito de Tranquilidad",
+  "series_voice_prompt": "No eres débil por sentirte cansado.\n\nA veces cargas cosas que nadie ve.\n\nSentirte así no significa que estés fallando.\n\nTal vez solo necesitas tratarte con más calma.\n\nEste fue tu pedacito de tranquilidad.",
+  "series_voice_notes": "Voz femenina latina, cálida, pausada, íntima, tono empático, velocidad lenta, sin dramatismo, sin energía motivacional exagerada.",
+  "magichour_lipsync_prompt": "Sincronizar la voz con el rostro de Sofi de forma natural y realista.\n\nPersonaje: Sofi, mujer latina de aproximadamente 30 años, piel trigueña clara, ojos café oscuro, cabello castaño oscuro liso hasta los hombros, cardigan lila suave, expresión calmada y empática.\n\nVoz: Femenina, cálida, pausada, íntima, español neutro latino.\n\nEstilo: Lip sync realista, natural y sutil. Mantener microgestos suaves, parpadeo natural, respiración lenta y expresión tranquila.\n\nEvitar: Movimientos exagerados de boca, gestos intensos, sonrisa forzada, cambios de rostro, cambios de edad, cambios de ropa, cambios de iluminación.",
+  "episodes": [
+    {
+      "id": "ep001",
+      "title": "No eres débil",
+      "clip_number": 1,
+      "status": "pending",
+      "duration_seconds": 5,
+      "script": "No eres débil por sentirte cansado.",
+      "scene_description": "Sofi mira directamente a cámara con expresión suave y comprensiva. Respira lentamente antes de hablar.",
+      "movement": "Mirada cálida, respiración lenta, postura relajada, leve inclinación de cabeza.",
+      "voice_notes": "Voz femenina latina, cálida, pausada, íntima. Velocidad lenta. Sin dramatismo.",
+      "flow_specific": "No text on screen. No cuts. One continuous 5-second take.",
+      "elevenlabs_audio_path": null,
+      "output_file": null
+    },
+    {
+      "id": "ep002",
+      "title": "Nadie lo ve",
+      "clip_number": 2,
+      "status": "pending",
+      "duration_seconds": 5,
+      "script": "A veces cargas cosas que nadie ve.",
+      "scene_description": "Sofi mantiene contacto visual con la cámara. Su expresión transmite comprensión, como si hablara con alguien agotado.",
+      "movement": "Pequeño gesto suave con una mano sobre las piernas, sin exagerar.",
+      "voice_notes": "Tono de comprensión profunda. Pausa antes de hablar. Intimidad máxima.",
+      "flow_specific": "No text on screen. Subtle hand movement. Warm empathetic expression.",
+      "elevenlabs_audio_path": null,
+      "output_file": null
+    },
+    {
+      "id": "ep003",
+      "title": "No estás fallando",
+      "clip_number": 3,
+      "status": "pending",
+      "duration_seconds": 5,
+      "script": "Sentirte así no significa que estés fallando.",
+      "scene_description": "Sofi habla con tono protector y mirada serena. La luz cálida se mantiene suave y natural.",
+      "movement": "Leve inclinación de cabeza. Cámara con acercamiento muy sutil.",
+      "voice_notes": "Tono protector y firme pero cálido. Énfasis suave en 'no significa'.",
+      "flow_specific": "No text on screen. Very subtle dolly push. Protective serene gaze.",
+      "elevenlabs_audio_path": null,
+      "output_file": null
+    },
+    {
+      "id": "ep004",
+      "title": "Pedacito de tranquilidad",
+      "clip_number": 4,
+      "status": "pending",
+      "duration_seconds": 5,
+      "script": "Tal vez solo necesitas tratarte con más calma.\nEste fue tu pedacito de tranquilidad.",
+      "scene_description": "Sofi cierra con una sonrisa muy sutil, mirada cálida y postura tranquila.",
+      "movement": "Sonrisa serena al final, respiración suave, cámara estable con acercamiento muy sutil.",
+      "voice_notes": "Ambas frases deben completarse dentro del clip. Pausa natural entre las dos oraciones. Cierre cálido, no abrupto.",
+      "flow_specific": "No text on screen. Both sentences must complete. Subtle warm smile at end. Stable camera.",
+      "elevenlabs_audio_path": null,
+      "output_file": null
+    }
+  ]
+}
