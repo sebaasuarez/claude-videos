@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
 """
 Master pipeline for "Pedacito de Tranquilidad" video generation.
-Orchestrates the full workflow: image → avatar → voice → video.
+
+100% FREE stack (using what you already have):
+  - Google Flow (free 50 credits/day)  → cinematic video of Sofi
+  - ElevenLabs free tier               → Spanish warm voice
+  - Magic Hour free tier               → lip-sync (ranked #1 in 2026)
 
 Usage:
-  # First time setup (generate Sofi's avatar):
+  # First time: generate Sofi's reference images
   python scripts/pipeline.py setup
 
-  # Generate a specific episode:
-  python scripts/pipeline.py generate --episode ep001
+  # Get the prompt to paste in Google Flow
+  python scripts/pipeline.py prompt --episode ep001
 
-  # Add a new episode and generate it:
-  python scripts/pipeline.py add --script "Tu cuerpo te habla. Apréndelo a escuchar." --title "Escucha tu cuerpo"
-  python scripts/pipeline.py generate --episode ep002
+  # Generate Spanish voiceover
+  python scripts/pipeline.py voice --episode ep001
+
+  # Apply lip-sync (API or web fallback instructions)
+  python scripts/pipeline.py lipsync --episode ep001
+
+  # Add new episodes
+  python scripts/pipeline.py add --title "Respira" --script "Respira. Solo eso."
 """
 
 import os
@@ -28,28 +37,18 @@ SCRIPTS_DIR = BASE_DIR / "scripts"
 
 
 def check_env():
-    missing = []
-    required = {
-        "OPENAI_API_KEY": "Generate Sofi's reference image with DALL-E 3",
-        "HEYGEN_API_KEY": "Create avatar and render videos",
-        "ELEVENLABS_API_KEY": "Generate Spanish voiceover (optional, HeyGen TTS used if missing)",
+    """Warn about missing optional keys (nothing is strictly required)."""
+    keys = {
+        "GEMINI_API_KEY": "Generate Sofi's image (free tier at aistudio.google.com)",
+        "ELEVENLABS_API_KEY": "Generate Spanish voice (free tier at elevenlabs.io)",
+        "MAGICHOUR_API_KEY": "Automate lip-sync (free tier at magichour.ai)",
     }
-    for key, purpose in required.items():
-        if not os.environ.get(key) and key != "ELEVENLABS_API_KEY":
-            missing.append(f"  {key}: {purpose}")
-
+    missing = [f"  {k}: {v}" for k, v in keys.items() if not os.environ.get(k)]
     if missing:
-        print("Missing required environment variables:")
+        print("Optional API keys not set (all have free tiers):")
         for m in missing:
             print(m)
-        print("\nSet them with:")
-        for key in required:
-            if key != "ELEVENLABS_API_KEY":
-                print(f"  export {key}=your_key_here")
-        sys.exit(1)
-
-    if not os.environ.get("ELEVENLABS_API_KEY"):
-        print("Note: ELEVENLABS_API_KEY not set. Will use HeyGen built-in TTS.")
+        print()
 
 
 def run(script: str, args: list = None):
@@ -57,46 +56,42 @@ def run(script: str, args: list = None):
     print(f"\nRunning: {' '.join(cmd)}")
     result = subprocess.run(cmd)
     if result.returncode != 0:
-        print(f"Error running {script}")
         sys.exit(result.returncode)
 
 
 def setup():
-    """One-time setup: generate Sofi's image and create her HeyGen avatar."""
-    print("=== SETUP: Creating Sofi's avatar ===\n")
+    """Generate Sofi's reference images using Gemini / Imagen 3."""
+    print("=== SETUP: Generating Sofi's reference images ===\n")
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("GEMINI_API_KEY not set.")
+        print("Get a free key at: https://aistudio.google.com/apikey")
+        print("\nAlternative: Generate manually in Google Flow or Gemini:")
+        print("  1. Open https://gemini.google.com")
+        print("  2. Ask: 'Generate a portrait image of Sofi' using the prompt in config/sofi_character.json")
+        print("  3. Save the best image to characters/sofi_ref_01.png")
+        sys.exit(0)
 
     run("01_generate_sofi_image.py")
 
-    # Find the first generated image
-    characters_dir = BASE_DIR / "characters"
-    images = sorted(characters_dir.glob("sofi_ref_*.png"))
-    if not images:
-        print("No reference images found. Check step 1.")
-        sys.exit(1)
-
-    print(f"\nReference images generated: {len(images)}")
-    print("Review the images and choose the best one.")
-    best = images[0]
-    print(f"Using: {best} (change with --image if needed)")
-
-    run("02_create_heygen_avatar.py", ["--image", str(best)])
-    print("\n=== Setup complete! Sofi's avatar is ready. ===")
-    print("Generate your first video with:")
-    print("  python scripts/pipeline.py generate --episode ep001")
+    images = sorted((BASE_DIR / "characters").glob("sofi_ref_*.png"))
+    print(f"\n{len(images)} reference images generated.")
+    print("Review them and use the best one in Google Flow as @sofi ingredient.")
+    print("\nNext: python scripts/pipeline.py prompt --episode ep001")
 
 
-def generate(episode_id: str, use_tts: bool = False):
-    """Generate a complete video for an episode."""
-    print(f"=== GENERATING VIDEO: {episode_id} ===\n")
+def prompt_step(episode_id: str):
+    """Print the Google Flow prompt for a given episode."""
+    run("02_flow_prompt.py", ["--episode", episode_id])
 
-    if os.environ.get("ELEVENLABS_API_KEY") and not use_tts:
-        run("03_generate_voice.py", ["--episode", episode_id])
-        run("04_generate_video_heygen.py", ["--episode", episode_id])
-    else:
-        run("04_generate_video_heygen.py", ["--episode", episode_id, "--use-tts"])
 
-    print(f"\n=== VIDEO READY: {episode_id} ===")
-    print(f"Find it in: {BASE_DIR / 'videos'}")
+def voice_step(episode_id: str):
+    """Generate Spanish voiceover with ElevenLabs."""
+    run("03_generate_voice.py", ["--episode", episode_id])
+
+
+def lipsync_step(episode_id: str):
+    """Apply lip-sync using Magic Hour."""
+    run("04_lipsync_magichour.py", ["--episode", episode_id])
 
 
 def add_episode(title: str, script: str, duration: int = 5):
@@ -105,12 +100,10 @@ def add_episode(title: str, script: str, duration: int = 5):
     with open(config_path) as f:
         data = json.load(f)
 
-    # Generate next episode ID
-    existing_ids = [ep["id"] for ep in data["episodes"]]
-    next_num = len(existing_ids) + 1
+    next_num = len(data["episodes"]) + 1
     ep_id = f"ep{next_num:03d}"
 
-    new_episode = {
+    data["episodes"].append({
         "id": ep_id,
         "title": title,
         "status": "pending",
@@ -120,55 +113,58 @@ def add_episode(title: str, script: str, duration: int = 5):
         "movement": "Warm gaze, slow breathing, slight head tilt",
         "voice_notes": "Warm, calm, intimate female voice. Neutral Latin American Spanish.",
         "heygen_video_id": None,
-        "elevenlabs_audio_id": None,
+        "elevenlabs_audio_path": None,
         "output_file": None,
-    }
+    })
 
-    data["episodes"].append(new_episode)
     with open(config_path, "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"Episode added: {ep_id} - {title}")
-    print(f"Script: {script}")
-    print(f"\nGenerate with:")
-    print(f"  python scripts/pipeline.py generate --episode {ep_id}")
+    print(f"Episode added: {ep_id} — {title}")
+    print(f'Script: "{script}"')
+    print(f"\nWorkflow:")
+    print(f"  python scripts/pipeline.py prompt   --episode {ep_id}  # Get Flow prompt")
+    print(f"  python scripts/pipeline.py voice    --episode {ep_id}  # Generate voice")
+    print(f"  python scripts/pipeline.py lipsync  --episode {ep_id}  # Apply lip-sync")
     return ep_id
 
 
 def list_episodes():
-    """Show all episodes and their status."""
-    config_path = CONFIG_DIR / "episodes.json"
-    with open(config_path) as f:
+    with open(CONFIG_DIR / "episodes.json") as f:
         data = json.load(f)
 
     print(f"\n{'ID':<8} {'Status':<12} {'Title'}")
-    print("-" * 50)
+    print("-" * 55)
     for ep in data["episodes"]:
-        print(f"{ep['id']:<8} {ep['status']:<12} {ep['title']}")
+        output = "✓" if ep.get("output_file") else " "
+        print(f"{ep['id']:<8} {ep['status']:<12} {output} {ep['title']}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Pedacito de Tranquilidad - Video Pipeline"
+        description="Pedacito de Tranquilidad — Free Video Pipeline"
     )
-    subparsers = parser.add_subparsers(dest="command")
+    sub = parser.add_subparsers(dest="command")
 
-    subparsers.add_parser("setup", help="First-time setup: generate Sofi's avatar")
+    sub.add_parser("setup", help="Generate Sofi reference images (one-time)")
 
-    gen_parser = subparsers.add_parser("generate", help="Generate video for an episode")
-    gen_parser.add_argument("--episode", required=True, help="Episode ID")
-    gen_parser.add_argument("--use-tts", action="store_true",
-                            help="Use HeyGen TTS instead of ElevenLabs")
+    p = sub.add_parser("prompt", help="Print Google Flow prompt for an episode")
+    p.add_argument("--episode", required=True)
 
-    add_parser = subparsers.add_parser("add", help="Add a new episode")
-    add_parser.add_argument("--title", required=True, help="Episode title")
-    add_parser.add_argument("--script", required=True, help="Script text (what Sofi says)")
-    add_parser.add_argument("--duration", type=int, default=5, help="Duration in seconds")
+    v = sub.add_parser("voice", help="Generate Spanish voiceover")
+    v.add_argument("--episode", required=True)
 
-    subparsers.add_parser("list", help="List all episodes and their status")
+    ls = sub.add_parser("lipsync", help="Apply lip-sync (Magic Hour)")
+    ls.add_argument("--episode", required=True)
+
+    a = sub.add_parser("add", help="Add a new episode")
+    a.add_argument("--title", required=True)
+    a.add_argument("--script", required=True)
+    a.add_argument("--duration", type=int, default=5)
+
+    sub.add_parser("list", help="List all episodes and status")
 
     args = parser.parse_args()
-
     if not args.command:
         parser.print_help()
         sys.exit(0)
@@ -177,8 +173,12 @@ def main():
 
     if args.command == "setup":
         setup()
-    elif args.command == "generate":
-        generate(args.episode, getattr(args, "use_tts", False))
+    elif args.command == "prompt":
+        prompt_step(args.episode)
+    elif args.command == "voice":
+        voice_step(args.episode)
+    elif args.command == "lipsync":
+        lipsync_step(args.episode)
     elif args.command == "add":
         add_episode(args.title, args.script, args.duration)
     elif args.command == "list":

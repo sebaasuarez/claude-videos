@@ -1,44 +1,71 @@
 # Pedacito de Tranquilidad — Video Pipeline
 
-Pipeline automatizado para generar videos con el personaje **Sofi**, avatar recurrente de la cuenta.
+Pipeline para generar videos con el personaje **Sofi**. **Costo adicional: $0** — usa herramientas 100% gratuitas o lo que ya pagas.
 
-## Stack técnico
+## Stack (todo gratis)
 
 | Herramienta | Propósito | Costo |
 |---|---|---|
-| **DALL-E 3** (OpenAI) | Generar imagen de referencia de Sofi | Ya pagado |
-| **HeyGen** | Avatar con lip-sync, video final | Desde $29/mes |
-| **ElevenLabs** | Voz española latina premium | $5/mes (Starter) |
+| **Google Flow** | Video cinemático de Sofi con Veo 3.1 | **Gratis** (50 créditos/día) |
+| **ElevenLabs** | Voz española latina cálida | **Gratis** (10K chars/mes) |
+| **Magic Hour** | Lip-sync #1 ranked 2026 | **Gratis** (3/día sin cuenta) |
+| Gemini API | Generar imagen de Sofi (opcional) | **Gratis** (free tier) |
 
-## Cuentas necesarias
+## Cuentas necesarias (todas gratuitas)
 
-1. **OpenAI** → ya tienes cuenta. Obtén API key en: https://platform.openai.com/api-keys
-2. **HeyGen** → Crea cuenta en: https://www.heygen.com → Settings → API → Get API Key
-3. **ElevenLabs** → Crea cuenta en: https://elevenlabs.io (plan gratuito sirve para empezar)
+1. **Google** → Ya tienes. Abre https://labs.google/flow (gratis con cualquier cuenta)
+2. **ElevenLabs** → https://elevenlabs.io — plan gratis, no tarjeta
+3. **Magic Hour** → https://magichour.ai — 3 lip-syncs/día sin ni crear cuenta
+
+## Workflow por video (3 pasos)
+
+```
+Google Flow → ElevenLabs → Magic Hour
+  (video)       (voz)       (lip-sync)
+```
+
+### Paso 1: Video en Google Flow (web)
+
+```bash
+# Genera el prompt exacto para pegar en Flow:
+python scripts/pipeline.py prompt --episode ep001
+```
+
+Luego en https://labs.google/flow:
+- Pega el prompt
+- Sube `characters/sofi_ref_01.png` como ingrediente (bloquea la apariencia de Sofi)
+- Genera con Veo 3.1, formato 9:16
+- Descarga como `videos/ep001_raw.mp4`
+
+### Paso 2: Voz en ElevenLabs
+
+```bash
+export ELEVENLABS_API_KEY=tu_clave_gratis
+python scripts/pipeline.py voice --episode ep001
+# → genera audio/ep001_voice.mp3
+```
+
+O manualmente en https://elevenlabs.io/text-to-speech (sin API key).
+
+### Paso 3: Lip-sync en Magic Hour
+
+```bash
+# Con API key (gratis en magichour.ai):
+export MAGICHOUR_API_KEY=tu_clave_gratis
+python scripts/pipeline.py lipsync --episode ep001
+
+# Sin API key: instrucciones en pantalla para la web
+python scripts/pipeline.py lipsync --episode ep001
+```
 
 ## Setup inicial (una sola vez)
 
 ```bash
-# Instalar dependencias
 pip install -r requirements.txt
 
-# Configurar variables de entorno
-export OPENAI_API_KEY=sk-...
-export HEYGEN_API_KEY=...
-export ELEVENLABS_API_KEY=...   # Opcional, usa HeyGen TTS si no está
-
-# Crear a Sofi (genera imagen + avatar en HeyGen)
+# Generar imagen de referencia de Sofi (opcional, también puedes hacerlo en Gemini web):
+export GEMINI_API_KEY=tu_clave_gratis  # aistudio.google.com/apikey
 python scripts/pipeline.py setup
-```
-
-## Generar un video
-
-```bash
-# Ver episodios disponibles
-python scripts/pipeline.py list
-
-# Generar el primer episodio (ep001)
-python scripts/pipeline.py generate --episode ep001
 ```
 
 ## Agregar nuevos episodios
@@ -46,11 +73,17 @@ python scripts/pipeline.py generate --episode ep001
 ```bash
 python scripts/pipeline.py add \
   --title "Respira" \
-  --script "Cuando todo se acumule... respira. Solo eso." \
-  --duration 5
+  --script "Cuando todo se acumule... respira. Solo eso."
 
-# Luego generar:
-python scripts/pipeline.py generate --episode ep002
+python scripts/pipeline.py prompt  --episode ep002
+python scripts/pipeline.py voice   --episode ep002
+python scripts/pipeline.py lipsync --episode ep002
+```
+
+## Ver todos los episodios
+
+```bash
+python scripts/pipeline.py list
 ```
 
 ## Estructura del proyecto
@@ -58,36 +91,36 @@ python scripts/pipeline.py generate --episode ep002
 ```
 claude-videos/
 ├── config/
-│   ├── sofi_character.json    # Descripción completa del personaje
-│   ├── episodes.json          # Lista de todos los episodios
-│   └── heygen_config.json     # Avatar ID de Sofi (generado en setup)
+│   ├── sofi_character.json    # Descripción completa de Sofi
+│   └── episodes.json          # Cola de episodios
 ├── characters/
-│   └── sofi_ref_01.png        # Imagen de referencia de Sofi
+│   └── sofi_ref_01.png        # Imagen de referencia (subir a Google Flow)
 ├── audio/
-│   └── ep001_voice.mp3        # Audio de cada episodio
+│   └── ep001_voice.mp3        # Voz generada por ElevenLabs
 ├── videos/
-│   └── ep001_final.mp4        # Videos finales listos para publicar
+│   ├── ep001_raw.mp4          # Video de Google Flow (sin lip-sync)
+│   └── ep001_final.mp4        # Video final con lip-sync
 └── scripts/
-    ├── 01_generate_sofi_image.py
-    ├── 02_create_heygen_avatar.py
-    ├── 03_generate_voice.py
-    ├── 04_generate_video_heygen.py
-    └── pipeline.py            # Orquestador principal
+    ├── 01_generate_sofi_image.py   # Imagen via Gemini API
+    ├── 02_flow_prompt.py           # Prompt para Google Flow
+    ├── 03_generate_voice.py        # Voz via ElevenLabs
+    ├── 04_lipsync_magichour.py     # Lip-sync via Magic Hour
+    └── pipeline.py                 # Orquestador
 ```
 
-## Costo estimado por video (5 segundos)
+## Costo real por video
 
-- ElevenLabs: ~$0 (texto muy corto, entra en plan gratuito)
-- HeyGen Avatar IV: ~$0.33 por video a 1080p
-- **En plan Creator ($29/mes): ~90 videos cortos por mes**
+- Google Flow: **$0** (50 créditos gratis/día → ~12 videos/día con Veo 3.1 Lite)
+- ElevenLabs: **$0** (texto muy corto, plan gratuito cubre docenas de clips)
+- Magic Hour: **$0** (3 lip-syncs/día sin cuenta, 100/día con cuenta gratuita)
+- **Total por video: $0**
 
 ## Personaje: Sofi
 
-Descripción completa en `config/sofi_character.json`.
+Ver `config/sofi_character.json` para la descripción completa.
 
-Características clave:
-- Mujer latina ~30 años, piel trigueña clara
-- Cabello castaño oscuro, raya al centro
-- Cardigan lila, blusa beige
+- Mujer latina ~30 años, piel trigueña cálida
+- Cabello castaño oscuro liso, raya al centro
+- Cardigan lila suave, blusa beige
 - Sala minimalista cálida, sillón beige
-- Voz calmada, empática, español latino neutro
+- Voz calmada, empática, español neutro latino
