@@ -1,0 +1,17 @@
+{
+  "episodes": [
+    {
+      "id": "ep001",
+      "title": "Haz una pausa",
+      "status": "pending",
+      "duration_seconds": 5,
+      "script": "Si hoy sientes que no puedes con todo,\nhaz una pausa.",
+      "scene_description": "Sofi is seated in the beige armchair, looking directly at camera. Breathes softly before speaking. Empathetic and calm expression.",
+      "movement": "Warm gaze, slow breathing, slight head tilt",
+      "voice_notes": "Warm, calm, intimate female voice. Neutral Latin American Spanish. Slow rhythm with natural pauses. Empathetic and soothing tone.",
+      "heygen_video_id": null,
+      "elevenlabs_audio_id": null,
+      "output_file": null
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "Sofi",
+  "account": "Pedacito de Tranquilidad",
+  "description": "Personaje recurrente de la cuenta",
+  "appearance": {
+    "age": "approximately 30",
+    "ethnicity": "Latina",
+    "skin": "light brown with warm undertone",
+    "face_shape": "oval, slightly elongated",
+    "eyes": "dark brown, almond-shaped",
+    "eyebrows": "natural, medium thickness",
+    "nose": "delicate and proportional",
+    "lips": "medium, natural rosy tone",
+    "expression": "soft, serene smile, warm and empathetic gaze",
+    "hair": "dark brown, straight with natural movement, shoulder-length, center part",
+    "makeup": "very subtle natural makeup, luminous healthy skin"
+  },
+  "outfit": {
+    "top": "soft lilac knit cardigan with V-neck, basic beige blouse underneath",
+    "bottom": "light beige pants",
+    "accessories": "small gold hoop earrings, thin minimalist necklace"
+  },
+  "setting": {
+    "location": "minimalist living room, cozy and warm",
+    "furniture": "beige armchair",
+    "pose": "relaxed seated, hands resting gently on legs, looking directly at camera",
+    "lighting": "soft natural light from left side window",
+    "colors": "cream, beige, warm white, lilac accents",
+    "props": "green plants, wooden desk, lilac wall painting",
+    "atmosphere": "intimate, calm, tranquil"
+  },
+  "visual_style": {
+    "format": "9:16 vertical",
+    "style": "realistic, cinematic, premium",
+    "framing": "medium close-up shot",
+    "camera": "stable with very subtle forward movement",
+    "depth_of_field": "soft",
+    "lighting_style": "warm natural",
+    "mood": "emotional and relaxing"
+  },
+  "voice": {
+    "gender": "female",
+    "tone": "warm, calm, intimate",
+    "language": "neutral Latin American Spanish",
+    "rhythm": "slow, with natural pauses",
+    "style": "empathetic and soothing"
+  },
+  "dall_e_prompt": "A young Latin woman approximately 30 years old, light brown warm skin tone, oval face, dark brown almond-shaped eyes, natural medium-thickness eyebrows, delicate nose, medium rosy lips, serene soft smile, warm empathetic gaze. Dark brown straight hair with natural movement, shoulder-length, center part. Very subtle natural makeup, luminous healthy skin. Wearing a soft lilac knit V-neck cardigan, basic beige blouse underneath, light beige pants, small gold hoop earrings, thin minimalist necklace. Seated in a beige armchair, relaxed posture, hands resting gently on lap, looking directly at camera. Minimalist cozy warm living room background, soft natural light from left side window, cream beige warm white tones with lilac accents, green plants, wooden desk, lilac painting on wall. Realistic, cinematic, premium photography style, medium close-up shot, soft depth of field, warm natural lighting, intimate atmosphere. Ultra-realistic portrait, 9:16 vertical composition."
+}
